@@ -7,8 +7,8 @@
     <ProjectGuid>{61D9F523-EFE3-44A2-A42E-4719D9A03452}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DeeceWorkerApi</RootNamespace>
-    <AssemblyName>DeeceWorkerApi</AssemblyName>
+    <RootNamespace>DeeceApi</RootNamespace>
+    <AssemblyName>DeeceApi</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -41,9 +41,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IWorkerApi.cs" />
+    <Compile Include="Client\Models\FileRequest.cs" />
+    <Compile Include="Client\Models\FileRequestResult.cs" />
+    <Compile Include="Client\Models\JobRequest.cs" />
+    <Compile Include="InternalWorker\IInternalWorkerApi.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="WorkerApi.cs" />
+    <Compile Include="InternalWorker\InternalWorkerApi.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

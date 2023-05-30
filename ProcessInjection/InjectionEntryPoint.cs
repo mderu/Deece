@@ -2,7 +2,7 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
-using DeeceWorkerApi;
+using DeeceApi.InternalWorker;
 using EasyHook;
 using ProcessInjection.Win32;
 
@@ -14,14 +14,13 @@ namespace ProcessInjection
     /// </summary>
     public class InjectionEntryPoint : IEntryPoint
     {
-        private readonly InjectedWorkerApi workerApi;
+        private readonly InjectedInternalWorkerApi workerApi;
         private readonly string ipcChannelName;
 
         public InjectionEntryPoint(RemoteHooking.IContext _, string ipcChannelName)
         {
-            workerApi = new InjectedWorkerApi(RemoteHooking.IpcConnectClient<WorkerApi>(ipcChannelName));
+            workerApi = new InjectedInternalWorkerApi(RemoteHooking.IpcConnectClient<InternalWorkerApi>(ipcChannelName));
             this.ipcChannelName = ipcChannelName;
-            workerApi.Ping();
         }
 
         public void Run(RemoteHooking.IContext _, string __)
@@ -83,6 +82,8 @@ namespace ProcessInjection
                 dwCreationDisposition,
                 dwFlagsAndAttributes,
                 hTemplateFile);
+
+            workerApi.LogMessage("__MDERU__:" + workerApi.GetFileName(lpFileName));
 
             workerApi.LogMessage(
                 $"[{RemoteHooking.GetCurrentProcessId()}, {RemoteHooking.GetCurrentThreadId()}] " +

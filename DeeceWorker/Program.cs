@@ -1,20 +1,29 @@
-﻿using DeeceWorkerApi;
+﻿using DeeceApi.Client.Models;
+using DeeceApi.InternalWorker;
 using EasyHook;
 using System;
 using System.IO;
+using System.Net;
+using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Runtime.Remoting;
+using System.Runtime.Remoting.Messaging;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Security.Cryptography.X509Certificates;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace DeeceWorker
 {
-    internal class Program
+    public class Program
     {
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             // Will contain the name of the IPC server channel
             string channelName = null;
             int childPid = 0;
 
-            RemoteHooking.IpcCreateServer<WorkerApi>(ref channelName, WellKnownObjectMode.Singleton);
+            RemoteHooking.IpcCreateServer<InternalWorkerApi>(ref channelName, WellKnownObjectMode.Singleton);
 
             // Get the full path to the assembly we want to inject into the target process
             string injectionLibrary = Path.Combine(

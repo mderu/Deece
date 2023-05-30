@@ -45,7 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="InjectedWorkerApi.cs" />
+    <Compile Include="InjectedInternalWorkerApi.cs" />
     <Compile Include="InjectionEntryPoint.cs" />
     <Compile Include="PInvoke.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -74,9 +74,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DeeceWorkerApi\DeeceWorkerApi.csproj">
+    <ProjectReference Include="..\DeeceApi\DeeceApi.csproj">
       <Project>{61d9f523-efe3-44a2-a42e-4719d9a03452}</Project>
-      <Name>DeeceWorkerApi</Name>
+      <Name>DeeceApi</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -75,9 +75,9 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DeeceWorkerApi\DeeceWorkerApi.csproj">
+    <ProjectReference Include="..\DeeceApi\DeeceApi.csproj">
       <Project>{61d9f523-efe3-44a2-a42e-4719d9a03452}</Project>
-      <Name>DeeceWorkerApi</Name>
+      <Name>DeeceApi</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProcessInjection\ProcessInjection.csproj">
       <Project>{af4c3838-270a-46c9-9771-a2507842da38}</Project>

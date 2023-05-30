@@ -5,6 +5,7 @@ VisualStudioVersion = 17.4.33103.184
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{84C11D1F-94ED-4B71-AB28-0F7CE61E4D9E}"
 	ProjectSection(SolutionItems) = preProject
+		moonshots.md = moonshots.md
 		structure.md = structure.md
 	EndProjectSection
 EndProject
@@ -12,7 +13,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProcessInjection", "Process
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeeceWorker", "DeeceWorker\DeeceWorker.csproj", "{69614D38-715B-4646-8D5C-DD615A965B16}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeeceWorkerApi", "DeeceWorkerApi\DeeceWorkerApi.csproj", "{61D9F523-EFE3-44A2-A42E-4719D9A03452}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeeceApi", "DeeceApi\DeeceApi.csproj", "{61D9F523-EFE3-44A2-A42E-4719D9A03452}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Deece", "Deece\Deece.csproj", "{C483C221-AEAE-472F-81A8-6453E3B41BFA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -32,6 +35,10 @@ Global
 		{61D9F523-EFE3-44A2-A42E-4719D9A03452}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{61D9F523-EFE3-44A2-A42E-4719D9A03452}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{61D9F523-EFE3-44A2-A42E-4719D9A03452}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C483C221-AEAE-472F-81A8-6453E3B41BFA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C483C221-AEAE-472F-81A8-6453E3B41BFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C483C221-AEAE-472F-81A8-6453E3B41BFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C483C221-AEAE-472F-81A8-6453E3B41BFA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
