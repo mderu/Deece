@@ -6,13 +6,14 @@ namespace DeeceApi.Client.Models
     {
         public int SizeInBytes { get; set; }
         public int ModelId { get; set; }
-    }
 
-    public class SentObject<T>
-    {
-        public int SizeInBytes { get; set; }
-        public int ModelId { get; set; }
-        public T Payload { get; set; }
+        public static int GetSize()
+        {
+            unsafe
+            {
+                return sizeof(SentObjectHeader);
+            }
+        }
     }
 
     public enum ModelId

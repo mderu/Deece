@@ -1,17 +1,8 @@
-﻿using DeeceApi.Client.Models;
-using DeeceApi.InternalWorker;
+﻿using DeeceApi.InternalWorker;
 using EasyHook;
 using System;
 using System.IO;
-using System.Net;
-using System.Net.Sockets;
-using System.Runtime.InteropServices;
 using System.Runtime.Remoting;
-using System.Runtime.Remoting.Messaging;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace DeeceWorker
 {
