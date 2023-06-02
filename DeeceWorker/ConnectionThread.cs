@@ -1,10 +1,17 @@
-﻿using DeeceApi.Client.Models;
+﻿using DeeceApi;
+using DeeceApi.Client.Models;
+using DeeceApi.InternalWorker;
+using EasyHook;
 using System;
+using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Security.Cryptography;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DeeceWorker
@@ -19,46 +26,26 @@ namespace DeeceWorker
 
         public async Task HandleConnection()
         {
-            var messageHeaderBytes = new ArraySegment<byte>(new byte[SentObjectHeader.GetSize()]);
-            EndPoint endPoint = null;
-            await socket.ReceiveFromAsync(messageHeaderBytes, SocketFlags.None, endPoint);
-
-            var messageHeader = FromBytes<SentObjectHeader>(messageHeaderBytes.ToArray());
+            SentObjectHeader messageHeader = await ReadFileHeader();
 
             ModelId modelId = (ModelId)messageHeader.ModelId;
             switch (modelId)
             {
                 case ModelId.JobRequest:
                     {
-                        await HandleJobRequest(messageHeader);
-                        break;
-                    }
-                case ModelId.FileResponse:
-                    {
-                        await HandleFileResponse(messageHeader);
+                        await ReceiveJobRequest(messageHeader);
                         break;
                     }
                 default:
                     {
                         // TODO: Don't kill the server. Gracefully tell the client
                         // that the message is not recognized.
-                        throw new Exception($"modelId {modelId} is not handled by this endpoint.");
+                        throw new Exception($"modelId {modelId} is not handled by this endpoint at this time.");
                     }
             }
         }
 
-        // TODO: Move into a util or something.
-        private static T FromBytes<T>(byte[] bytes)
-        {
-            BinaryFormatter bf = new BinaryFormatter();
-            using (MemoryStream ms = new MemoryStream(bytes))
-            {
-                object obj = bf.Deserialize(ms);
-                return (T)obj;
-            }
-        }
-
-        private async Task HandleJobRequest(SentObjectHeader header)
+        private async Task ReceiveJobRequest(SentObjectHeader header)
         {
             var jobRequestBytes = new ArraySegment<byte>(new byte[header.SizeInBytes]);
             int bytesRead = await socket.ReceiveAsync(jobRequestBytes, SocketFlags.None);
@@ -68,29 +55,135 @@ namespace DeeceWorker
                 throw new Exception($"Received the wrong number of bytes for handling {nameof(JobRequest)}.");
             }
 
-            JobRequest jobRequest = FromBytes<JobRequest>(jobRequestBytes.ToArray());
+            JobRequest jobRequest = Utils.FromBytes<JobRequest>(jobRequestBytes.ToArray());
 
-            // TODO:
-            // 1. Begin job execution.
-            // 2. Blocking read against traffic coming in from the IPC channel with the new pid.
-            // 3. Implement an IPC channel message when the injected process completes.
-            // 4. Handle all IPC channel messages, calling client-worker APIs as necessary.
-            // 5. Send job result object back over the wire.
+            await StartProcess(jobRequest);
         }
 
-        private async Task HandleFileResponse(SentObjectHeader header)
+        private async Task<FileResponse> ReceiveFileResponse(SentObjectHeader header)
         {
             var fileResponseBytes = new ArraySegment<byte>(new byte[header.SizeInBytes]);
             int bytesRead = await socket.ReceiveAsync(fileResponseBytes, SocketFlags.None);
 
+            Console.WriteLine($"Header Type: {header.ModelId}, Size: {header.SizeInBytes}");
             if (bytesRead != header.SizeInBytes)
             {
                 throw new Exception($"Received the wrong number of bytes for handling {nameof(FileResponse)}.");
             }
 
-            FileResponse fileResponse = FromBytes<FileResponse>(fileResponseBytes.ToArray());
+            return Utils.FromBytes<FileResponse>(fileResponseBytes.ToArray());
+        }
 
-            // TODO: notify the process that the file is ready. Load the new path.
+        private async Task SendFileRequest(string originalFilename)
+        {
+            FileRequest fileRequest = new FileRequest()
+            {
+                MessageId = 0,
+                OriginalFilePath = originalFilename,
+            };
+            var fileRequestBytes = new ArraySegment<byte>(Utils.ToBytes(fileRequest));
+
+            SentObjectHeader header = new SentObjectHeader()
+            {
+                ModelId = (int)ModelId.FileRequest,
+                SizeInBytes = fileRequestBytes.Count,
+            };
+            var headerBytes = new ArraySegment<byte>(Utils.ToBytes(header));
+
+            await socket.SendAsync(headerBytes, SocketFlags.None);
+            await socket.SendAsync(fileRequestBytes, SocketFlags.None);
+            DoNothing();
+            DoNothing();
+            DoNothing();
+            DoNothing();
+            DoNothing();
+            DoNothing();
+            DoNothing();
+        }
+
+        private void DoNothing() { }
+
+        private async Task<SentObjectHeader> ReadFileHeader()
+        {
+            // TODO: Cache this byte array?
+            var messageHeaderBytes = new ArraySegment<byte>(Utils.ToBytes(new SentObjectHeader()));
+            await socket.ReceiveAsync(messageHeaderBytes, SocketFlags.None);
+
+            var messageHeader = Utils.FromBytes<SentObjectHeader>(messageHeaderBytes.ToArray());
+            return messageHeader;
+        }
+
+        private async Task<JobResponse> StartProcess(JobRequest jobRequest)
+        {
+            string injectionLibrary = Path.Combine(
+                Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "ProcessInjection.dll");
+
+            int childPid = 0;
+
+            try
+            {
+                // TODO: Redirect stdout/stderr to a file.
+                // TODO: Set working directory and environment variables.
+                RemoteHooking.CreateAndInject(
+                    InEXEPath: jobRequest.OriginalExecutablePath,
+                    InCommandLine: jobRequest.Commandline,
+                    InProcessCreationFlags: 0,
+                    InOptions: InjectionOptions.DoNotRequireStrongName,
+                    InLibraryPath_x86: injectionLibrary,
+                    InLibraryPath_x64: injectionLibrary,
+                    OutProcessId: out childPid,
+                    // singleton is null, pls fix
+                    InternalWorkerCommunication.Instance.Channel);
+            }
+            catch (Exception e)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("There was an error while injecting into target:");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(e.ToString());
+                Console.ResetColor();
+            }
+
+            CancellationTokenSource src = new CancellationTokenSource();
+
+            ThreadPool.QueueUserWorkItem(async (s) =>
+            {
+                await Process.GetProcessById(childPid).WaitForExitAsync();
+                src.Cancel(false);
+            });
+
+            try
+            {
+                while (InternalWorkerCommunication.Instance.ReadFileRequest(childPid, out int tid, out string originalFilename, src.Token))
+                {
+                    await SendFileRequest(originalFilename);
+                    SentObjectHeader messageHeader = await ReadFileHeader();
+                    FileResponse response = await ReceiveFileResponse(messageHeader);
+
+                    string newFilePath = Path.GetFullPath(Path.Combine(GetCasPath(), response.Hash));
+                    if (!File.Exists(newFilePath) && response.Hash != FileResponse.FileDoesNotExist)
+                    {
+                        File.WriteAllBytes(newFilePath, response.Contents);
+                    }
+
+                    long ptid = (((long)childPid) << 32) + tid;
+                    InternalWorkerCommunication.Instance.WriteFileResponse(ptid, newFilePath);
+                }
+            }
+            catch (OperationCanceledException e)
+            {
+
+            }
+
+            return null;
+        }
+
+        private string GetCasPath()
+        {
+            string tempDirectory = Path.Combine(Path.GetTempPath(), ".deece", "cas");
+            Directory.CreateDirectory(tempDirectory);
+            return tempDirectory;
         }
     }
 }

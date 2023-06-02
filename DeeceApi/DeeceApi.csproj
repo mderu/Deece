@@ -21,7 +21,6 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -45,11 +44,15 @@
   <ItemGroup>
     <Compile Include="Client\Models\FileRequest.cs" />
     <Compile Include="Client\Models\FileResponse.cs" />
+    <Compile Include="Client\Models\ISerializable.cs" />
     <Compile Include="Client\Models\JobRequest.cs" />
-    <Compile Include="Client\Models\SentObject.cs" />
+    <Compile Include="Client\Models\JobResponse.cs" />
+    <Compile Include="Client\Models\SentObjectHeader.cs" />
     <Compile Include="InternalWorker\IInternalWorkerApi.cs" />
+    <Compile Include="InternalWorker\InternalWorkerCommunication.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="InternalWorker\InternalWorkerApi.cs" />
+    <Compile Include="Utils.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

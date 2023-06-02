@@ -1,5 +1,8 @@
-﻿namespace DeeceApi.Client.Models
+﻿using System;
+
+namespace DeeceApi.Client.Models
 {
+    [Serializable]
     public class JobRequest
     {
         /// <summary>

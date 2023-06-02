@@ -5,7 +5,7 @@
     /// </summary>
     public interface IInternalWorkerApi
     {
-        string GetFileName(string remoteFileName, int pid);
+        string GetFileName(string remoteFileName, int pid, int tid);
         void LogMessage(string message);
     }
 }

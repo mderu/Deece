@@ -45,11 +45,8 @@ namespace ProcessInjection
         public string GetFileName(string remoteFileName)
         {
             int currentPid = RemoteHooking.GetCurrentProcessId();
-            Pointer<string> fileName = new Pointer<string>();
-            Task task = new Task(() => fileName.Value = workerApi.GetFileName(remoteFileName, currentPid));
-            queue.Add(task);
-            task.Wait();
-            return fileName.Value;
+            int currentTid = RemoteHooking.GetCurrentThreadId();
+            return workerApi.GetFileName(remoteFileName, currentPid, currentTid);
         }
     }
 }

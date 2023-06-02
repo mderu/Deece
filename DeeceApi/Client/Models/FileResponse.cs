@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Linq;
+using System.Text;
 
 namespace DeeceApi.Client.Models
 {
     [Serializable]
     public class FileResponse
     {
+        public const string FileDoesNotExist = "DOES_NOT_EXIST";
         /// <summary>
         /// The id of the <see cref="FileRequest"/> this response is for.
         /// </summary>

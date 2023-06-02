@@ -2,20 +2,14 @@
 
 namespace DeeceApi.Client.Models
 {
+    [Serializable]
     public struct SentObjectHeader
     {
         public int SizeInBytes { get; set; }
         public int ModelId { get; set; }
-
-        public static int GetSize()
-        {
-            unsafe
-            {
-                return sizeof(SentObjectHeader);
-            }
-        }
     }
 
+    [Serializable]
     public enum ModelId
     {
         JobRequest = 0,

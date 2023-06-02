@@ -10,8 +10,17 @@ namespace DeeceApi.InternalWorker
     /// </summary>
     public class InternalWorkerApi : MarshalByRefObject, IInternalWorkerApi
     {
+        // TODO: Have the function that makes one of these return an InternalWorkerApi.
+        public static InternalWorkerApi singleton = null;
+
+        public string Channel { get; private set; }
         public InternalWorkerApi()
         {
+            if (singleton != null)
+            {
+                throw new InvalidOperationException("Cannot create another InternalWorkerApi");
+            }
+            singleton = this;
         }
 
         /// <summary>
@@ -21,7 +30,7 @@ namespace DeeceApi.InternalWorker
         /// <param name="pid">The PID of the process requesting this file.</param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        public string GetFileName(string remoteFileName, int pid)
+        public string GetFileName(string remoteFileName, int pid, int tid)
         {
             // Special case CONOUT$, CONIN$:
             // https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea#consoles
@@ -31,16 +40,9 @@ namespace DeeceApi.InternalWorker
                 return remoteFileName;
             }
 
-            // TODO: Reach out to the client instead.
-            if (pid != 0)
-            {
-                // TODO: Create an actual lookup table.
-                string relativePath = new Uri("C:/").MakeRelativeUri(new Uri(remoteFileName)).ToString();
-                string newPath = Path.Combine("D:/Temp/", relativePath);
-                return newPath;
-            }
+            string newFile = InternalWorkerCommunication.Instance.RequestFile(pid, tid, remoteFileName);
 
-            throw new Exception("Not sure how we got here");
+            return newFile;
         }
 
         /// <summary>

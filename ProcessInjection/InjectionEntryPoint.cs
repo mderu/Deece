@@ -63,6 +63,8 @@ namespace ProcessInjection
             }
         }
 
+        public const uint GENERIC_WRITE = 0x40000000;
+
         public IntPtr CreateFile_Hook(
             [In] string lpFileName,
             [In] uint dwDesiredAccess,
@@ -83,7 +85,10 @@ namespace ProcessInjection
                 dwFlagsAndAttributes,
                 hTemplateFile);
 
-            workerApi.LogMessage("__MDERU__:" + workerApi.GetFileName(lpFileName));
+            if ((dwDesiredAccess & GENERIC_WRITE) == 0)
+            {
+                workerApi.LogMessage("__MDERU__:" + workerApi.GetFileName(lpFileName));
+            }
 
             workerApi.LogMessage(
                 $"[{RemoteHooking.GetCurrentProcessId()}, {RemoteHooking.GetCurrentThreadId()}] " +
