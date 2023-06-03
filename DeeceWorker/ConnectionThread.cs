@@ -88,16 +88,9 @@ namespace DeeceWorker
                 ModelId = (int)ModelId.FileRequest,
                 SizeInBytes = fileRequestBytes.Count,
             };
-            var headerBytes = new ArraySegment<byte>(Utils.ToBytes(header));
+            var dataToSend = new ArraySegment<byte>(Utils.ToBytes(header).Concat(fileRequestBytes).ToArray());
 
-            await socket.SendAsync(headerBytes, SocketFlags.None);
-            await socket.SendAsync(fileRequestBytes, SocketFlags.None);
-            DoNothing();
-            DoNothing();
-            DoNothing();
-            DoNothing();
-            DoNothing();
-            DoNothing();
+            await socket.SendAsync(dataToSend, SocketFlags.None);
             DoNothing();
         }
 

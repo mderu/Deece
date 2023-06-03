@@ -41,9 +41,7 @@ namespace Deece
                 ModelId = (int)Enum.Parse<ModelId>(nameof(JobRequest)),
             };
             var headerBytes = Utils.ToBytes(header);
-            await socket.SendAsync(headerBytes);
-            await socket.SendAsync(bytes);
-
+            await socket.SendAsync(headerBytes.Concat(bytes).ToArray());
             
             while (true)
             {
@@ -95,8 +93,7 @@ namespace Deece
             };
             byte[] headerBytes = Utils.ToBytes(header);
 
-            await socket.SendAsync(headerBytes);
-            await socket.SendAsync(fileResponseBytes);
+            await socket.SendAsync(headerBytes.Concat(fileResponseBytes).ToArray());
         }
     }
 }
