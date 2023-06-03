@@ -5,6 +5,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using DeeceApi.Client.Models;
 using DeeceApi.InternalWorker;
+using EasyHook;
+using System.Runtime.Remoting;
+using System.Security.Principal;
 
 namespace DeeceWorker
 {
@@ -20,6 +23,8 @@ namespace DeeceWorker
         public const int DefaultPort = 63_378;
 
         private bool isDisposed = false;
+
+        private object channelCreationLock = new object();
 
         public Server()
         {
@@ -44,6 +49,7 @@ namespace DeeceWorker
             {
                 Console.WriteLine("Waiting for a connection...");
                 Socket newSocket = await listener.AcceptAsync();
+
                 var connectionThread = new ConnectionThread(newSocket);
 
                 // TODO: Taskify?

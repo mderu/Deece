@@ -48,10 +48,8 @@
     <Compile Include="Client\Models\JobRequest.cs" />
     <Compile Include="Client\Models\JobResponse.cs" />
     <Compile Include="Client\Models\SentObjectHeader.cs" />
-    <Compile Include="InternalWorker\IInternalWorkerApi.cs" />
     <Compile Include="InternalWorker\InternalWorkerCommunication.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="InternalWorker\InternalWorkerApi.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

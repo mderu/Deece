@@ -1,6 +1,7 @@
 ﻿using DeeceApi.InternalWorker;
 using EasyHook;
 using System.Collections.Concurrent;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,15 +9,10 @@ namespace ProcessInjection
 {
     public class InjectedInternalWorkerApi
     {
-        class Pointer<T>
-        {
-            public T Value { get; set; }
-        }
-
-        private readonly InternalWorkerApi workerApi;
+        private readonly InternalWorkerCommunication workerApi;
         private readonly BlockingCollection<Task> queue;
 
-        public InjectedInternalWorkerApi(InternalWorkerApi workerApi)
+        public InjectedInternalWorkerApi(InternalWorkerCommunication workerApi)
         {
             this.workerApi = workerApi;
             queue = new BlockingCollection<Task>();
@@ -35,18 +31,24 @@ namespace ProcessInjection
             }
         }
 
-        /// <inheritdoc/>
         public void LogMessage(string message)
         {
             queue.Add(new Task(() => workerApi.LogMessage(message)));
         }
 
-        /// <inheritdoc/>
         public string GetFileName(string remoteFileName)
         {
+            // Special case CONOUT$, CONIN$:
+            // https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea#consoles
+            // In Windows, regular files are forbidden to be named CONIN$ or CONOUT$
+            if (remoteFileName == "CONIN$" || remoteFileName == "CONOUT$")
+            {
+                return remoteFileName;
+            }
+
             int currentPid = RemoteHooking.GetCurrentProcessId();
             int currentTid = RemoteHooking.GetCurrentThreadId();
-            return workerApi.GetFileName(remoteFileName, currentPid, currentTid);
+            return workerApi.RequestFile(currentPid, currentTid, remoteFileName);
         }
     }
 }

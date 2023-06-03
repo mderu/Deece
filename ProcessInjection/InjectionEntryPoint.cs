@@ -19,7 +19,7 @@ namespace ProcessInjection
 
         public InjectionEntryPoint(RemoteHooking.IContext _, string ipcChannelName)
         {
-            workerApi = new InjectedInternalWorkerApi(RemoteHooking.IpcConnectClient<InternalWorkerApi>(ipcChannelName));
+            workerApi = new InjectedInternalWorkerApi(RemoteHooking.IpcConnectClient<InternalWorkerCommunication>(ipcChannelName));
             this.ipcChannelName = ipcChannelName;
         }
 

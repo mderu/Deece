@@ -9,8 +9,11 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.Remoting;
+using System.Runtime.Remoting.Channels.Ipc;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
+using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,10 +21,17 @@ namespace DeeceWorker
 {
     public class ConnectionThread
     {
+        private readonly InternalWorkerCommunication jobApi;
+        private readonly string ipcChannelName;
         private readonly Socket socket;
         public ConnectionThread(Socket socket)
         {
             this.socket = socket;
+
+            jobApi = new InternalWorkerCommunication();
+            string ipcChannelName = null;
+            RemoteHooking.IpcCreateServer(ref ipcChannelName, WellKnownObjectMode.Singleton, jobApi);
+            this.ipcChannelName = ipcChannelName;
         }
 
         public async Task HandleConnection()
@@ -62,16 +72,17 @@ namespace DeeceWorker
 
         private async Task<FileResponse> ReceiveFileResponse(SentObjectHeader header)
         {
-            var fileResponseBytes = new ArraySegment<byte>(new byte[header.SizeInBytes]);
-            int bytesRead = await socket.ReceiveAsync(fileResponseBytes, SocketFlags.None);
-
+            var fileResponseBytes = new byte[header.SizeInBytes];
+            int offset = 0;
             Console.WriteLine($"Header Type: {header.ModelId}, Size: {header.SizeInBytes}");
-            if (bytesRead != header.SizeInBytes)
+            while (offset !=  header.SizeInBytes)
             {
-                throw new Exception($"Received the wrong number of bytes for handling {nameof(FileResponse)}.");
+                offset += await socket.ReceiveAsync(
+                    new ArraySegment<byte>(fileResponseBytes, offset, header.SizeInBytes - offset),
+                    SocketFlags.None);
             }
 
-            return Utils.FromBytes<FileResponse>(fileResponseBytes.ToArray());
+            return Utils.FromBytes<FileResponse>(fileResponseBytes);
         }
 
         private async Task SendFileRequest(string originalFilename)
@@ -126,8 +137,7 @@ namespace DeeceWorker
                     InLibraryPath_x86: injectionLibrary,
                     InLibraryPath_x64: injectionLibrary,
                     OutProcessId: out childPid,
-                    // singleton is null, pls fix
-                    InternalWorkerCommunication.Instance.Channel);
+                    ipcChannelName);
             }
             catch (Exception e)
             {
@@ -148,7 +158,7 @@ namespace DeeceWorker
 
             try
             {
-                while (InternalWorkerCommunication.Instance.ReadFileRequest(childPid, out int tid, out string originalFilename, src.Token))
+                while (jobApi.ReadFileRequest(childPid, out int tid, out string originalFilename, src.Token))
                 {
                     await SendFileRequest(originalFilename);
                     SentObjectHeader messageHeader = await ReadFileHeader();
@@ -161,12 +171,11 @@ namespace DeeceWorker
                     }
 
                     long ptid = (((long)childPid) << 32) + tid;
-                    InternalWorkerCommunication.Instance.WriteFileResponse(ptid, newFilePath);
+                    jobApi.WriteFileResponse(ptid, newFilePath);
                 }
             }
             catch (OperationCanceledException e)
             {
-
             }
 
             return null;
